@@ -1,3 +1,5 @@
+package com.mekdes.ai.message;
+
 public class ChatRequest {
     private String userMessage;
 

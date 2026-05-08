@@ -1,3 +1,5 @@
+package com.mekdes.ai.message;
+
 public class ChatResponse {
     private String assistantMessage;
 

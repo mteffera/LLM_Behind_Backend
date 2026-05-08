@@ -1,3 +1,5 @@
+package com.mekdes.ai.message;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -11,9 +13,16 @@ public class AiService {
     @Value("${gemini.api.key}")
     private String apiKey;
 
-    private final RestTemplate rest = new RestTemplate();
+    private final RestTemplate rest;
 
-    public String chat(String userMessage) {
+    public AiService(RestTemplate rest) {
+        this.rest = rest;
+    }
+
+    public String chat(String userMessage) throws Exception {
+        if (userMessage == null || userMessage.trim().isEmpty()) {
+            throw new IllegalArgumentException("User message cannot be empty");
+        }
 
         String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
 
@@ -30,14 +39,26 @@ public class AiService {
 
         HttpEntity<Map<String, Object>> request = new HttpEntity<>(body, headers);
 
-        ResponseEntity<Map> response = rest.postForEntity(url, request, Map.class);
+        try {
+            ResponseEntity<Map> response = rest.postForEntity(url, request, Map.class);
 
-        // Extract assistant message
-        var candidates = (java.util.List) response.getBody().get("candidates");
-        var content = (Map) ((Map) candidates.get(0)).get("content");
-        var parts = (java.util.List) content.get("parts");
-        var text = (Map) parts.get(0);
+            if (response.getStatusCode() != HttpStatus.OK || response.getBody() == null) {
+                throw new Exception("Failed to get response from AI service");
+            }
 
-        return text.get("text").toString();
+            // Extract assistant message
+            var candidates = (java.util.List) response.getBody().get("candidates");
+            if (candidates == null || candidates.isEmpty()) {
+                throw new Exception("No candidates in response");
+            }
+
+            var content = (Map) ((Map) candidates.get(0)).get("content");
+            var parts = (java.util.List) content.get("parts");
+            var text = (Map) parts.get(0);
+
+            return text.get("text").toString();
+        } catch (Exception e) {
+            throw new Exception("AI Service Error: " + e.getMessage(), e);
+        }
     }
 }
