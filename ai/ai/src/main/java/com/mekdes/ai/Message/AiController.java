@@ -3,7 +3,7 @@ package com.mekdes.ai.message;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/ai")
+@RequestMapping({"/ai", "/api"})
 @CrossOrigin(origins = {"*"}, allowedHeaders = "*")
 public class AiController {
 

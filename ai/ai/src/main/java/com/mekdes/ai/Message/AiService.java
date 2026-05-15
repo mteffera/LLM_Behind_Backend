@@ -10,8 +10,11 @@ import java.util.Map;
 @Service
 public class AiService {
 
-    @Value("${gemini.api.key}")
+    @Value("${gemini.api.key:${spring.ai.google.generativeai.api-key:}}")
     private String apiKey;
+
+    @Value("${gemini.api.model:gemini-1.5-flash-latest}")
+    private String model;
 
     private final RestTemplate rest;
 
@@ -20,11 +23,14 @@ public class AiService {
     }
 
     public String chat(String userMessage) throws Exception {
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new IllegalStateException("Missing AI API key. Set gemini.api.key or spring.ai.google.generativeai.api-key in application.properties.");
+        }
         if (userMessage == null || userMessage.trim().isEmpty()) {
             throw new IllegalArgumentException("User message cannot be empty");
         }
 
-        String url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=" + apiKey;
+        String url = "https://generativelanguage.googleapis.com/v1beta/models/" + model + ":generateContent?key=" + apiKey;
 
         Map<String, Object> body = Map.of(
                 "contents", new Object[]{
